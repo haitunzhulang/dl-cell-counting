@@ -1,0 +1,80 @@
+%% generate the cell images and their corresponding density maps
+
+%% number of images in dataset
+imgNum = 300;
+numPixels = 250;
+
+cellNums = zeros(imgNum,1);
+imageSet = zeros(numPixels, numPixels, 3, imgNum);
+mapSet = zeros(numPixels, numPixels, imgNum);
+
+%% generate the numbers of cells for each image
+for i = 1: imgNum
+    if i< 241
+        continue
+    end
+    i
+    % generate a random number for the number of the cells in the image
+    if i <=100
+        cellNums(1:100) = randi([200,1000],100,1);
+    end
+    if i> 100 | i<=200
+        cellNums(101:200) = randi([1000,2000],100,1);
+    end
+    if i>200
+        cellNums(201:300) = randi([2000,3000],100,1);
+    end
+    % generate the synthetic cell image
+    [image,binary,features] = counting_simcep(cellNums(i));
+    % generate the synthetic density map
+    cellCoords = features.nuclei.coords;
+    [xNum,yNum,zNum] = size(image);
+    densityMap = zeros(xNum,yNum);
+    for j = 1: length(cellCoords)
+       cellCenter = cellCoords{j};
+       densityMap = densityMap + generate_gaussian(cellCenter,xNum,yNum);
+    end
+    % store the image and its density map
+    imageSet(:,:,:,i) = image;
+    mapSet(:,:,i) = densityMap;
+end
+
+%% save the cell images and the corresponding density maps to the disk
+folder = './dataset';
+imageFilePath = fullfile(folder,'imageSet.dat');
+densityFilePath = fullfile(folder,'densitySet.dat');
+
+%% convert the rgb cell images to the gray images
+grayImages = zeros(numPixels, numPixels, imgNum);
+for i = 1: imgNum
+   image = uint8(squeeze(imageSet(:,:,:,i)));
+   grayImages(:,:,i) = rgb2gray(image);
+end
+
+% save the images
+fid = fopen(imageFilePath,'w');
+fwrite(fid,grayImages,'double');
+fclose(fid);
+
+% save the density maps
+fid = fopen(densityFilePath,'w');
+fwrite(fid,mapSet,'double');
+fclose(fid);
+
+% for i = 1: imgNum
+%     image = uint8(squeeze(imageSet(:,:,:,i)));
+%     densityMap = mapSet(:,:,i);
+%     subplot(1,2,1)
+%     imshow(image)
+%     subplot(1,2,2)
+%     imshow(densityMap,[])
+%     pause(1)
+% end
+
+% fid = fopen('image.dat','w');
+% fwrite(fid, image, 'double');
+% fclose(fid);
+% 
+% fid = fopen('density.dat','w');
+% fwrite(fid, densityMap, 'double');
+% fclose(fid);
