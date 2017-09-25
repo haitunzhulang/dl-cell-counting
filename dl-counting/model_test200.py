@@ -14,7 +14,7 @@ import scipy.misc as misc
 import keras.backend.tensorflow_backend as KTF
 import tensorflow as tf
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 val_version=3
 
 def get_session(gpu_fraction=0.9):
@@ -35,8 +35,8 @@ input_shape=[(200,200)]
 
 # load the model
 # model_path = 'lr-0.001-scaled-batch-480/'+ 'model.h5'
-model_path = '9.21-lr-0.001-scaled-batch-100v-3fcn-200/'+ 'model.h5'
-val_version = 3
+model_path = '9.23-lr-0.001-scaled-batch-100-v4-fcn-200/'+ 'model.h5'
+val_version = 4
 model=load_model(model_path)
 # lr=0.0005
 # model=cg.fcn32()
@@ -67,7 +67,7 @@ for i in range(9):
 # image display
 preds_arr = np.array(preds_list)
 
-density_map = hf.patch_merge_for_display(preds_arr, 250)
+density_map = hf.patch_merge_for_display(preds_arr, 400)
 pred_count = np.sum(density_map)
 real_count = np.sum(Images[0,:,:,1])
 print([pred_count, real_count])
@@ -138,33 +138,141 @@ mean_abs_err = np.mean(abs_err_list)
 std_abs_err = np.std(abs_err_list)
 
 
-train_path = './real.dat'
-data_num = 26*4*400*400
-train_data = np.fromfile(train_path,dtype=np.float,count=data_num,sep='')
-train_data = train_data.reshape(26,4,400,400)
-shp = train_data.shape
+# train_path = './real.dat'
+# data_num = 26*4*400*400
+# train_data = np.fromfile(train_path,dtype=np.float,count=data_num,sep='')
+# train_data = train_data.reshape(26,4,400,400)
+# shp = train_data.shape
+# 
+# result_list=[]
+# for i in range(shp[1]):
+# 	count_list =[]
+# 	for j in range(shp[0]):
+# 		image = train_data[j,i,:,:]
+# 		image = 256*(train_data - np.min(train_data))/(np.max(train_data)-np.min(train_data))
+# 		imagelist = []
+# 		imagelist.append(image[:200,:200])
+# 		imagelist.append(image[:200,200:400])
+# 		imagelist.append(image[200:400,:200])
+# 		imagelist.append(image[200:400,200:400])
+# 		preds_list = []
+# 		preds_count_list = []
+# 		for i in range(len(imagelist)):
+# 			preds = model.predict(imagelist[i].reshape(1,200,200,1))
+# 			preds = preds/100
+# 			preds = preds.reshape(200,200)
+# 			preds_list.append(preds)
+# 			preds_count_list.append(np.sum(preds))
+# 		count_list.append(sum(preds_count_list))
+# 	result_list.append(count_list)
 
-result_list=[]
-for i in range(shp[1]):
-	count_list =[]
-	for j in range(shp[0]):
-		image = train_data[j,i,:,:]
-		image = 256*(train_data - np.min(train_data))/(np.max(train_data)-np.min(train_data))
-		imagelist = []
-		imagelist.append(image[:200,:200])
-		imagelist.append(image[:200,200:400])
-		imagelist.append(image[200:400,:200])
-		imagelist.append(image[200:400,200:400])
-		preds_list = []
-		preds_count_list = []
-		for i in range(len(imagelist)):
-			preds = model.predict(imagelist[i].reshape(1,200,200,1))
-			preds = preds/100
-			preds = preds.reshape(200,200)
-			preds_list.append(preds)
-			preds_count_list.append(np.sum(preds))
-		count_list.append(sum(preds_count_list))
-	result_list.append(count_list)
+folder = './minn/'
+## load the original cell images
+real_path = folder + 'real.dat'
+data_num = 26*4*400*400
+real_data = np.fromfile(real_path, dtype = np.float, count = data_num, sep ='')
+real_data = real_data.reshape(26,4,400,400)
+shp = real_data.shape
+
+real_images_list =[]
+
+# decompose the image into image patches for estimation
+patches_list =[]
+for i in range(shp[0]):
+	for j in range(shp[1]):
+		image = real_data[i,j,:,:]
+		image = 256*(image - np.min(image))/(np.max(image)-np.min(image))
+		image = image*(image>25)
+		real_images_list.append(image)
+		patches_list.append(image[:200,:200])
+		patches_list.append(image[:200,200:400])
+		patches_list.append(image[200:400,:200])
+		patches_list.append(image[200:400,200:400])
+
+real_images = np.array(real_images_list).reshape(26,4,400,400)
+
+# estimate the density for each image patch	
+preds_list =[]
+preds_count_list =[]
+for i in range(len(patches_list)):
+	preds = model.predict(patches_list[i].reshape(1,200,200,1))
+	preds = preds/100
+	preds = preds.reshape(200,200)
+	preds_list.append(preds)
+	preds_count_list.append(np.sum(preds))
+
+# compose the patch density into full image density	
+density_maps_list =[]
+count_list =[]
+for i in range(len(preds_list)):
+	if i%4 ==0:
+		density_map = np.zeros((shp[2],shp[3]))
+		density_map[:200,:200] = preds_list[i]
+		density_map[:200,200:400] =preds_list[i+1]
+		density_map[200:400,:200] =preds_list[i+2]
+		density_map[200:400,200:400] = preds_list[i+3]
+		density_maps_list.append(density_map)
+		count_list.append(np.sum(np.array(preds_count_list)[i:i+4]))
+
+density_arr = np.reshape(np.array(density_maps_list),shp)
+count_arr = np.array(count_list).reshape(-1,4)
+
+plt.ion()
+fig =plt.figure()
+
+for i in range(shp[0]):
+	plt.clf()
+	ax =fig.add_subplot(2,4,1)
+	cax = ax.imshow(real_data[i,1,:,:])
+# 	cax = ax.imshow(real_images[i,1,:,:])
+	fig.colorbar(cax)
+	ax.set_ylabel('Real cell image:')
+	ax.set_title('dapi')
+	ax =fig.add_subplot(2,4,2)
+	ax.imshow(real_data[i,0,:,:])
+# 	ax.imshow(real_images[i,0,:,:])
+# 	cax = ax.imshow(Images[0,:,:,0])
+	fig.colorbar(cax)
+	ax.set_title('cxd2')
+	ax =fig.add_subplot(2,4,3)
+	cax = ax.imshow(real_data[i,2,:,:])
+# 	cax = ax.imshow(real_images[i,2,:,:])
+	fig.colorbar(cax)
+	ax.set_title('sox17')
+	ax =fig.add_subplot(2,4,4)
+	cax = ax.imshow(real_data[i,3,:,:])
+# 	cax = ax.imshow(real_images[i,3,:,:])
+	fig.colorbar(cax)
+	ax.set_title('sox2')
+	ax =fig.add_subplot(2,4,5)
+	cax = ax.imshow(density_arr[i,1,:,:])
+	fig.colorbar(cax)
+	ax.set_xlabel('Cell count: '+str(count_arr[i,1]))
+	ax =fig.add_subplot(2,4,6)
+	cax =  ax.imshow(density_arr[i,0,:,:])
+	fig.colorbar(cax)
+	ax.set_xlabel('Cell count: '+str(count_arr[i,0]))
+	ax =fig.add_subplot(2,4,7)
+	cax = ax.imshow(density_arr[i,2,:,:])
+	fig.colorbar(cax)
+	ax.set_xlabel('Cell count: '+str(count_arr[i,2]))
+	ax =fig.add_subplot(2,4,8)
+	cax = ax.imshow(density_arr[i,3,:,:])
+	fig.colorbar(cax)
+	ax.set_xlabel('Cell count: '+str(count_arr[i,3]))
+	plt.pause(1)
+	
+
+# compose the estimated results into a complete estimated density
+
+
+## load the cell count
+
+
+## load the cell segmentation
+
+
+## load the 
 
 
 # plt.ion()
