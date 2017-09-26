@@ -62,7 +62,6 @@ for i in range(9):
 	preds = preds/100
 	preds = preds.reshape(200,200)
 	preds_list.append(preds)
-	
 
 # image display
 preds_arr = np.array(preds_list)
@@ -138,33 +137,8 @@ mean_abs_err = np.mean(abs_err_list)
 std_abs_err = np.std(abs_err_list)
 
 
-# train_path = './real.dat'
-# data_num = 26*4*400*400
-# train_data = np.fromfile(train_path,dtype=np.float,count=data_num,sep='')
-# train_data = train_data.reshape(26,4,400,400)
-# shp = train_data.shape
-# 
-# result_list=[]
-# for i in range(shp[1]):
-# 	count_list =[]
-# 	for j in range(shp[0]):
-# 		image = train_data[j,i,:,:]
-# 		image = 256*(train_data - np.min(train_data))/(np.max(train_data)-np.min(train_data))
-# 		imagelist = []
-# 		imagelist.append(image[:200,:200])
-# 		imagelist.append(image[:200,200:400])
-# 		imagelist.append(image[200:400,:200])
-# 		imagelist.append(image[200:400,200:400])
-# 		preds_list = []
-# 		preds_count_list = []
-# 		for i in range(len(imagelist)):
-# 			preds = model.predict(imagelist[i].reshape(1,200,200,1))
-# 			preds = preds/100
-# 			preds = preds.reshape(200,200)
-# 			preds_list.append(preds)
-# 			preds_count_list.append(np.sum(preds))
-# 		count_list.append(sum(preds_count_list))
-# 	result_list.append(count_list)
+
+################################# Estimate the density maps based on the real cell images ########################
 
 folder = './minn/'
 ## load the original cell images
@@ -217,81 +191,108 @@ for i in range(len(preds_list)):
 density_arr = np.reshape(np.array(density_maps_list),shp)
 count_arr = np.array(count_list).reshape(-1,4)
 
+## load segmented images
+seg_path = folder +'segment.dat'
+seg_data = np.fromfile(seg_path, dtype = np.float, count = data_num, sep ='')
+seg_data = seg_data.reshape(26,4,400,400)
+
+## load the predicted cell counts from Minn
+import glob
+import csv
+fileNames = glob.glob(folder+'*.csv')
+
+files =[[],[],[],[]]
+for f in fileNames:
+	if 'cdx2' in f.lower():
+		files[0] = f
+
+for f in fileNames:
+	if 'dapi' in f.lower():
+		files[1] = f
+		
+for f in fileNames:
+	if 'sox17' in f.lower():
+		files[2] = f
+
+for f in fileNames:
+	if 'sox2' in f.lower():
+		files[3] = f
+
+results_list =[]
+for file in files:
+	f = open(file,'rt')
+	reader = csv.reader(f)
+	for row in reader:
+		results_list.append(float(row[1]))
+		
+result_arr = np.array(results_list).reshape(shp[1],shp[0])
+result_arr = np.transpose(result_arr)
+
+for row in reader:
+	print(row)
+
 plt.ion()
 fig =plt.figure()
 
 for i in range(shp[0]):
 	plt.clf()
-	ax =fig.add_subplot(2,4,1)
+	ax =fig.add_subplot(3,4,1)
 	cax = ax.imshow(real_data[i,1,:,:])
 # 	cax = ax.imshow(real_images[i,1,:,:])
 	fig.colorbar(cax)
-	ax.set_ylabel('Real cell image:')
+	ax.set_ylabel('Real cell image')
 	ax.set_title('dapi')
-	ax =fig.add_subplot(2,4,2)
+	ax =fig.add_subplot(3,4,2)
 	ax.imshow(real_data[i,0,:,:])
 # 	ax.imshow(real_images[i,0,:,:])
 # 	cax = ax.imshow(Images[0,:,:,0])
 	fig.colorbar(cax)
 	ax.set_title('cxd2')
-	ax =fig.add_subplot(2,4,3)
+	ax =fig.add_subplot(3,4,3)
 	cax = ax.imshow(real_data[i,2,:,:])
 # 	cax = ax.imshow(real_images[i,2,:,:])
 	fig.colorbar(cax)
 	ax.set_title('sox17')
-	ax =fig.add_subplot(2,4,4)
+	ax =fig.add_subplot(3,4,4)
 	cax = ax.imshow(real_data[i,3,:,:])
 # 	cax = ax.imshow(real_images[i,3,:,:])
 	fig.colorbar(cax)
 	ax.set_title('sox2')
-	ax =fig.add_subplot(2,4,5)
+	ax =fig.add_subplot(3,4,5)
+	cax = ax.imshow(seg_data[i,1,:,:])
+	fig.colorbar(cax)
+	ax.set_ylabel('Minn segmented result')
+	ax.set_xlabel('Cell count: '+str(result_arr[i,1]))
+	ax =fig.add_subplot(3,4,6)
+	cax =  ax.imshow(seg_data[i,0,:,:])
+	fig.colorbar(cax)
+	ax.set_xlabel('Cell count: '+str(result_arr[i,0]))
+	ax =fig.add_subplot(3,4,7)
+	cax = ax.imshow(seg_data[i,2,:,:])
+	fig.colorbar(cax)
+	ax.set_xlabel('Cell count: '+str(result_arr[i,2]))
+	ax =fig.add_subplot(3,4,8)
+	cax = ax.imshow(seg_data[i,3,:,:])
+	fig.colorbar(cax)
+	ax.set_xlabel('Cell count: '+str(result_arr[i,3]))
+	ax =fig.add_subplot(3,4,9)
 	cax = ax.imshow(density_arr[i,1,:,:])
 	fig.colorbar(cax)
+	ax.set_ylabel('Estimated density map')
 	ax.set_xlabel('Cell count: '+str(count_arr[i,1]))
-	ax =fig.add_subplot(2,4,6)
+	ax =fig.add_subplot(3,4,10)
 	cax =  ax.imshow(density_arr[i,0,:,:])
 	fig.colorbar(cax)
 	ax.set_xlabel('Cell count: '+str(count_arr[i,0]))
-	ax =fig.add_subplot(2,4,7)
+	ax =fig.add_subplot(3,4,11)
 	cax = ax.imshow(density_arr[i,2,:,:])
 	fig.colorbar(cax)
 	ax.set_xlabel('Cell count: '+str(count_arr[i,2]))
-	ax =fig.add_subplot(2,4,8)
+	ax =fig.add_subplot(3,4,12)
 	cax = ax.imshow(density_arr[i,3,:,:])
 	fig.colorbar(cax)
 	ax.set_xlabel('Cell count: '+str(count_arr[i,3]))
 	plt.pause(1)
-	
 
-# compose the estimated results into a complete estimated density
-
-
-## load the cell count
-
-
-## load the cell segmentation
-
-
-## load the 
-
-
-# plt.ion()
-# fig = plt.figure()
-# for i in range(len(imagelist)):
-# 	preds = model.predict(imagelist[i].reshape(1,100,100,1))
-# 	preds = preds/100
-# 	pred_count = np.sum(preds)
-# 	real_count = np.sum(densitylist[i])
-# 	print([pred_count, real_count])
-# 	ax = fig.add_subplot(1,3,1)
-# 	ax.imshow(imagelist[i].reshape((100,100)))
-# 	ax.set_title('Cell image')
-# 	ax = fig.add_subplot(1,3,2)
-# 	ax.imshow(preds.reshape((100,100)))
-# 	ax.set_title('Estimated density')
-# 	ax = fig.add_subplot(1,3,3)
-# 	ax.imshow(densitylist[i].reshape((100,100)))
-# 	ax.set_title('Ground truth')
-# 	plt.pause(1)
 
 
