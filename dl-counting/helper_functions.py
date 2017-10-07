@@ -58,7 +58,7 @@ def plot_loss(model_name,loss,val_loss):
     ax.plot(val_loss,'r-',linewidth=1.3)
     ax.set_title('Model Loss')
     ax.set_ylabel('MSE')
-    ax.set_xlabel('epoches')
+    ax.set_xlabel('epochs')
     ax.legend(['train', 'test'], loc='upper left')  
     canvas = FigureCanvasAgg(fig)
     canvas.print_figure(f_out, dpi=80)
@@ -79,6 +79,39 @@ def plot_cell_counts(model_name,preds_count_list,real_count_list):
     ax.legend(['Prediction', 'Ground truth'], loc='upper left')  
     canvas = FigureCanvasAgg(fig)
     canvas.print_figure(f_out, dpi=80)
+    
+def plot_cell_counts_comp(model_name,preds_count_list, preds_count_list2,real_count_list):
+	generate_folder(model_name)
+	f_out=model_name+'/cell_count_comp.png'
+	from matplotlib.backends.backend_agg import FigureCanvasAgg
+	from matplotlib.figure import Figure
+	# sort the results by ordering the cell counts in the ground truth images
+	count_list = np.array([real_count_list, preds_count_list, preds_count_list2]).transpose().tolist()
+	count_list.sort()
+	count_list_sorted = np.array(count_list).transpose().tolist()
+	real_count_list = count_list_sorted[0]
+	print(np.mean(real_count_list[0:500]))
+	preds_count_list = count_list_sorted[1]
+	preds_count_list2 = count_list_sorted[2]
+	abs_err_list = np.abs(np.array(preds_count_list[0:500])-np.array(real_count_list[0:500]))
+	mean_abs_err = np.mean(abs_err_list)
+	std_abs_err = np.std(abs_err_list)
+	print([mean_abs_err, std_abs_err])
+	abs_err_list = np.abs(np.array(preds_count_list2[0:500])-np.array(real_count_list[0:500]))
+	mean_abs_err = np.mean(abs_err_list)
+	std_abs_err = np.std(abs_err_list)
+	print([mean_abs_err, std_abs_err])
+	fig = Figure(figsize=(12,6))
+	ax = fig.add_subplot(1,1,1)
+	ax.plot(preds_count_list,'b-',linewidth=1.0)
+	ax.plot(preds_count_list2,'g-',linewidth=0.6)
+	ax.plot(real_count_list,'r-',linewidth=1.0)
+	ax.set_title('Cell counts')
+	ax.set_ylabel('Count of cells')
+	ax.set_xlabel('Patchs')
+	ax.legend(['FCRN estimation', 'FCN estimation', 'Ground truth'], loc='upper left')
+	canvas = FigureCanvasAgg(fig)
+	canvas.print_figure(f_out, dpi=100)
 
 def load_random_data(val_version=1):
 	imageFileName = folder + 'imageSet.dat'
@@ -135,18 +168,151 @@ def load_random_data(val_version=1):
 		test_truths = truthImages[200:300,:,:]
 
 	if val_version==5:
-		# train data dir
+		# 400 x 400 training data, cell size: 9 pixels, density: 2
+		# cell number: [200-600], [600-1200], [1200-2000]
+		imageFileName = folder + 'imageSet9s.dat'
+		densityFileName = folder + 'densitySet9s.dat'
+		print(imageFileName)
+		print(densityFileName)
 		print('validation version:'+str(val_version))
-		train_test_path=DIR+'/train_test_1.dat'
-		truth_path=DIR+'/ground_truth_1.dat'
-		data=dl.train_load(train_test_path);
-		truthImages=dl.truth_load(truth_path);
-		data,truthImages=images_shuffle(data,truthImages)
-		train_data=data[54:269,:,:,:]
-		test_data=data[0:54,:,:,:]
-		train_truths=truthImages[54:269,:,:]
-		test_truths=truthImages[0:54,:,:]
-		
+		image_shape = (400,400)
+		image_number = 300
+		data=dl.train_data_load(imageFileName, image_shape, image_number);
+		truthImages=dl.truth_data_load(densityFileName, image_shape, image_number);
+# 		data,truthImages=images_shuffle(data,truthImages)
+		train_data = data[0:200,:,:]
+		test_data = data[200:300,:,:]
+		train_truths = truthImages[0:200,:,:]
+		test_truths = truthImages[200:300,:,:]
+
+	if val_version==6:
+		# 400 x 400 training data, cell size: 9 pixels, density: 4
+		# cell number: [200-600], [600-1200], [1200-2000]
+		imageFileName = folder + 'imageSet9s1.dat'
+		densityFileName = folder + 'densitySet9s1.dat'
+		print(imageFileName)
+		print(densityFileName)
+		print('validation version:'+str(val_version))
+		image_shape = (400,400)
+		image_number = 300
+		data=dl.train_data_load(imageFileName, image_shape, image_number);
+		truthImages=dl.truth_data_load(densityFileName, image_shape, image_number);
+# 		data,truthImages=images_shuffle(data,truthImages)
+		train_data = data[0:200,:,:]
+		test_data = data[200:300,:,:]
+		train_truths = truthImages[0:200,:,:]
+		test_truths = truthImages[200:300,:,:]
+
+	if val_version==7:
+		# 400 x 400 training data, cell size: 8 pixels, kernel: 4.5x5
+		# cell number: [200-600], [600-1000], [1000-1500]
+		imageFileName = folder + 'imageSet_c8_k4.dat'
+		densityFileName = folder + 'densitySet_c8_k4.dat'
+		print(imageFileName)
+		print(densityFileName)
+		print('validation version:'+str(val_version))
+		image_shape = (400,400)
+		image_number = 300
+		data = dl.train_data_load(imageFileName, image_shape, image_number);
+		# normalize the data range into [0,255]
+		for i in range(data.shape[0]):
+			image = data[i,:,:]
+			data[i,:,:] = 255*(image - np.min(image))/(np.max(image)-np.min(image))
+		truthImages=dl.truth_data_load(densityFileName, image_shape, image_number);
+# 		data,truthImages=images_shuffle(data,truthImages)
+		train_data = data[0:200,:,:]
+		test_data = data[200:300,:,:]
+		train_truths = truthImages[0:200,:,:]
+		test_truths = truthImages[200:300,:,:]
+
+	if val_version==8:
+		# 400 x 400 training data, cell size: 8 pixels, kernel: 4x4
+		# cell number: [200-600], [600-1000], [1000-1500]
+		imageFileName = folder + 'imageSet_c8_k4_nb.dat'
+		densityFileName = folder + 'densitySet_c8_k4_nb.dat'
+		print(imageFileName)
+		print(densityFileName)
+		print('validation version:'+str(val_version))
+		image_shape = (400,400)
+		image_number = 300
+		data = dl.train_data_load(imageFileName, image_shape, image_number);
+		# normalize the data range into [0,255]
+		for i in range(data.shape[0]):
+			image = data[i,:,:]
+			data[i,:,:] = 255*(image - np.min(image))/(np.max(image)-np.min(image))
+		truthImages=dl.truth_data_load(densityFileName, image_shape, image_number);
+# 		data,truthImages=images_shuffle(data,truthImages)
+		train_data = data[0:200,:,:]
+		test_data = data[200:300,:,:]
+		train_truths = truthImages[0:200,:,:]
+		test_truths = truthImages[200:300,:,:]
+
+	if val_version==9:
+		# 400 x 400 training data, cell size: 8 pixels, kernel: 4.5x4, intensity: x2
+		# cell number: [200-600], [600-1000], [1000-1500]
+		imageFileName = folder + 'imageSet_c8_k4_nb_v0.dat'
+		densityFileName = folder + 'densitySet_c8_k4_nb_v0.dat'
+		print(imageFileName)
+		print(densityFileName)
+		print('validation version:'+str(val_version))
+		image_shape = (400,400)
+		image_number = 300
+		data = dl.train_data_load(imageFileName, image_shape, image_number);
+		# normalize the data range into [0,255]
+		for i in range(data.shape[0]):
+			image = data[i,:,:]
+			data[i,:,:] = 255*(image - np.min(image))/(np.max(image)-np.min(image))
+		truthImages=dl.truth_data_load(densityFileName, image_shape, image_number);
+# 		data,truthImages=images_shuffle(data,truthImages)
+		train_data = data[0:200,:,:]
+		test_data = data[200:300,:,:]
+		train_truths = truthImages[0:200,:,:]
+		test_truths = truthImages[200:300,:,:]
+
+	if val_version==10:
+		# 400 x 400 training data, cell size: 8 pixels, kernel: 5x4, intensity: x2
+		# cell number: [200-600], [600-1000], [1000-1500]
+		imageFileName = folder + 'imageSet_c8_k20_nb_v0.dat'
+		densityFileName = folder + 'densitySet_c8_k20_nb_v0.dat'
+		print(imageFileName)
+		print(densityFileName)
+		print('validation version:'+str(val_version))
+		image_shape = (400,400)
+		image_number = 300
+		data = dl.train_data_load(imageFileName, image_shape, image_number);
+		# normalize the data range into [0,255]
+		for i in range(data.shape[0]):
+			image = data[i,:,:]
+			data[i,:,:] = 255*(image - np.min(image))/(np.max(image)-np.min(image))
+		truthImages=dl.truth_data_load(densityFileName, image_shape, image_number);
+# 		data,truthImages=images_shuffle(data,truthImages)
+		train_data = data[0:200,:,:]
+		test_data = data[200:300,:,:]
+		train_truths = truthImages[0:200,:,:]
+		test_truths = truthImages[200:300,:,:]
+
+	if val_version==11:
+		# 400 x 400 training data, cell size: 8 pixels, kernel: 5x4, intensity: x2
+		# cell number: [200-600], [600-1000], [1000-1500]
+		imageFileName = folder + 'imageSet_c8_k20_nb_v1.dat'
+		densityFileName = folder + 'densitySet_c8_k20_nb_v1.dat'
+		print(imageFileName)
+		print(densityFileName)
+		print('validation version:'+str(val_version))
+		image_shape = (400,400)
+		image_number = 300
+		data = dl.train_data_load(imageFileName, image_shape, image_number);
+		# normalize the data range into [0,255]
+		for i in range(data.shape[0]):
+			image = data[i,:,:]
+			data[i,:,:] = 255*(image - np.min(image))/(np.max(image)-np.min(image))
+		truthImages=dl.truth_data_load(densityFileName, image_shape, image_number);
+# 		data,truthImages=images_shuffle(data,truthImages)
+		train_data = data[0:200,:,:]
+		test_data = data[200:300,:,:]
+		train_truths = truthImages[0:200,:,:]
+		test_truths = truthImages[200:300,:,:]
+				
 	return train_data, test_data, train_truths, test_truths
 
 def images_shuffle(train_imgs,truth_imgs):
@@ -324,7 +490,7 @@ def train_model(model, X_train, X_val, Y_train, Y_val, nb_epochs=400, nb_epoch_p
 		valDensityMaps = np.array(val_densitylist)
 		val_imglist = None
 		val_densitylist = None
-		score=model.evaluate(valImages,valDensityMaps,verbose=1,batch_size=int(batch_size*2))
+		score=model.evaluate(valImages,valDensityMaps,verbose=1,batch_size=int(batch_size))
 		valImages=None
 		valDensityMaps =None
 		tr_loss.append(hist.history['loss'][-1])
@@ -478,3 +644,22 @@ def test_model(model,X_data,Y_data, nb_image, input_shape=(65,65,3)):
 	ratios=[pixelLabelList.count(lb)/len(pixelLabelList) for lb in range(5)]
 	print(acc_ave)
 	return acc_list, ratios
+	
+## The tool for cnn_generator
+def get_crop_shape(target, refer):
+	# width, the 3rd dimension
+	cw = (target.get_shape()[2]-refer.get_shape()[2]).value
+	assert(cw>0)
+	if cw%2 !=0:
+		cw1, cw2 = int(cw/2), int(cw/2)+1
+	else:
+		cw1, cw2 = int(cw/2), int(cw/2)
+	# height, the 2nd dimension
+	ch = (target.get_shape()[1]-refer.get_shape()[1]).value	
+# 	assert(ch>0)
+# 	if ch%2 !=0:
+# 		ch1, ch2 = int(ch/2), int(ch/2)+1
+# 	else:
+# 		ch1, ch2 = int(ch/2), int(ch/2)
+	ch1, ch2 = cw1, cw2
+	return (ch1, ch2), (cw1, cw2)
