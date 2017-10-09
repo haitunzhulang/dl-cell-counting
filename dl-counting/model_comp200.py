@@ -14,7 +14,7 @@ import scipy.misc as misc
 import keras.backend.tensorflow_backend as KTF
 import tensorflow as tf
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # val_version=3
 
 def get_session(gpu_fraction=1.0):
@@ -42,13 +42,14 @@ val_version = 10
 # model_path = '9.30-lr-0.001-scaled-batch-100-v11-FCN/'+ 'model.h5'
 # model_path = '9.30-lr-0.0015-scaled-batch-100-v10-FCN/'+ 'model.h5'
 
-# version = 11
-# model_path1 = '9.28-lr-0.001-scaled-batch-100-v11-fcn-200/'+ 'model.h5'
-# model_path2 = '9.30-lr-0.001-scaled-batch-100-v11-FCN/'+ 'model.h5'
-
 val_version = 11
-model_path1 = '10.04-lr-0.0015-scaled-batch-100-v10-fcn200/'+ 'model.h5'
-model_path2 = '9.30-lr-0.0015-scaled-batch-100-v10-FCN/'+ 'model.h5'
+model_path1 = '9.28-lr-0.001-scaled-batch-100-v11-fcn-200/'+ 'model.h5'
+# model_path2 = '9.30-lr-0.001-scaled-batch-100-v11-FCN/'+ 'model.h5'
+model_path2 = '10.07-lr-0.005-scaled-batch-100-v11-FCN1/'+ 'model.h5'
+
+# val_version = 10
+# model_path1 = '10.04-lr-0.0015-scaled-batch-100-v10-fcn200/'+ 'model.h5'
+# model_path2 = '9.30-lr-0.0015-scaled-batch-100-v10-FCN/'+ 'model.h5'
 
 X_train,X_val,Y_train,Y_val=hf.load_random_data(val_version = val_version)
 Y_val=Y_val.reshape((Y_val.shape[0],Y_val.shape[1],Y_val.shape[2],1))
