@@ -62,11 +62,33 @@ def plot_loss(model_name,loss,val_loss):
     ax.legend(['train', 'test'], loc='upper left')  
     canvas = FigureCanvasAgg(fig)
     canvas.print_figure(f_out, dpi=80)
+    
+# plot mean absolute error and std
+def plot_mae(model_name,mae_list,std_list):
+    generate_folder(model_name)
+    f_out=model_name+'/mean_absolute_error.png'
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    from matplotlib.figure import Figure
+    fig = Figure(figsize=(8,6))
+    ax = fig.add_subplot(1,1,1)
+    ax.plot(mae_list,'b-',linewidth=1.3)
+    ax.plot(std_list,'r-',linewidth=1.3)
+    ax.set_title('Stats of Absolute error')
+    ax.set_ylabel('Error')
+    ax.set_xlabel('epochs')
+    ax.legend(['MAE', 'STD'], loc='upper left')  
+    canvas = FigureCanvasAgg(fig)
+    canvas.print_figure(f_out, dpi=80)
 
 # plot and save the file
 def plot_cell_counts(model_name,preds_count_list,real_count_list):
     generate_folder(model_name)
     f_out=model_name+'/cell_count.png'
+    count_list = np.array([real_count_list, preds_count_list]).transpose().tolist()
+    count_list.sort()
+    count_list_sorted = np.array(count_list).transpose().tolist()
+    real_count_list = count_list_sorted[0]
+    preds_count_list = count_list_sorted[1]
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from matplotlib.figure import Figure
     fig = Figure(figsize=(12,6))
@@ -312,7 +334,95 @@ def load_random_data(val_version=1):
 		test_data = data[200:300,:,:]
 		train_truths = truthImages[0:200,:,:]
 		test_truths = truthImages[200:300,:,:]
-				
+
+	if val_version==13:
+                # 400 x 400 training data, cell size: 8 pixels, kernel: 5x4, intensity: x2
+                # cell number: [200-600], [600-1000], [1000-1500]
+                imageFileName = folder + 'imageSet_c8_k20_nb_v4.dat'
+                densityFileName = folder + 'densitySet_c8_k20_nb_v4.dat'
+                print(imageFileName)
+                print(densityFileName)
+                print('validation version:'+str(val_version))
+                image_shape = (400,400)
+                image_number = 300
+                data = dl.train_data_load(imageFileName, image_shape, image_number);
+                # normalize the data range into [0,255]
+                for i in range(data.shape[0]):
+                        image = data[i,:,:]
+                        data[i,:,:] = 255*(image - np.min(image))/(np.max(image)-np.min(image))
+                truthImages=dl.truth_data_load(densityFileName, image_shape, image_number);
+#               data,truthImages=images_shuffle(data,truthImages)
+                train_data = data[0:200,:,:]
+                test_data = data[200:300,:,:]
+                train_truths = truthImages[0:200,:,:]
+                test_truths = truthImages[200:300,:,:]
+
+	if val_version==12:
+		# 400 x 400 training data, cell size: 8 pixels, kernel: 5x4, intensity: x2
+		# cell number: [200-600], [600-1000]
+		imageFileName = folder + 'imageSet_c8_k20_nb_v3.dat'
+		densityFileName = folder + 'densitySet_c8_k20_nb_v3.dat'
+		print(imageFileName)
+		print(densityFileName)
+		print('validation version:'+str(val_version))
+		image_shape = (400,400)
+		image_number = 200
+		data = dl.train_data_load(imageFileName, image_shape, image_number);
+		# normalize the data range into [0,255]
+		for i in range(data.shape[0]):
+			image = data[i,:,:]
+			data[i,:,:] = 255*(image - np.min(image))/(np.max(image)-np.min(image))
+		truthImages=dl.truth_data_load(densityFileName, image_shape, image_number);
+# 		data,truthImages=images_shuffle(data,truthImages)
+		train_data = data[0:100,:,:]
+		test_data = data[100:200,:,:]
+		train_truths = truthImages[0:100,:,:]
+		test_truths = truthImages[100:200,:,:]
+
+	if val_version==14:
+		# 512x512 real images, kernel: 5x4
+		imageFileName = folder + 'realImages_v1.dat'
+		densityFileName = folder + 'realDensities_v1.dat'
+		print(imageFileName)
+		print(densityFileName)
+		print('validation version:'+str(val_version))
+		image_shape = (512,512)
+		image_number = 10
+		data = dl.train_data_load(imageFileName, image_shape, image_number);
+		# normalize the data range into [0,255]
+		for i in range(data.shape[0]):
+			image = data[i,:,:]
+			data[i,:,:] = 255*(image - np.min(image))/(np.max(image)-np.min(image))
+		truthImages=dl.truth_data_load(densityFileName, image_shape, image_number);
+# 		data,truthImages=images_shuffle(data,truthImages)
+		# train data: 7 images validation data: 3 images
+		train_data = data[0:7,:,:]
+		test_data = data[7:10,:,:]
+		train_truths = truthImages[0:7,:,:]
+		test_truths = truthImages[7:10,:,:]
+
+	if val_version==15:
+		# 400 x 400 training data, cell size: 8 pixels, kernel: 5x4, intensity: x2
+		# cell number: [200-600], [600-1000], [1000-1500]
+		imageFileName = folder + 'imageSet_c9_k13.5_b_v4.dat'
+		densityFileName = folder + 'densitySet_c9_k13.5_b_v4.dat'
+		print(imageFileName)
+		print(densityFileName)
+		print('validation version:'+str(val_version))
+		image_shape = (256,256)
+		image_number = 200
+		data = dl.train_data_load(imageFileName, image_shape, image_number);
+		# normalize the data range into [0,255]
+		for i in range(data.shape[0]):
+			image = data[i,:,:]
+			data[i,:,:] = 255*(image - np.min(image))/(np.max(image)-np.min(image))
+		truthImages=dl.truth_data_load(densityFileName, image_shape, image_number);
+# 		data,truthImages=images_shuffle(data,truthImages)
+		train_data = data[0:100,:,:]
+		test_data = data[100:200,:,:]
+		train_truths = truthImages[0:100,:,:]
+		test_truths = truthImages[100:200,:,:]
+
 	return train_data, test_data, train_truths, test_truths
 
 def images_shuffle(train_imgs,truth_imgs):
@@ -420,7 +530,11 @@ def patch_density_gen(batch, hImgSize, nb_sampling=100, test_flag=False):
 			by=yid+hImgSize-yrIdx
 			extr_image=batch[i,xlIdx:xrIdx,ylIdx:yrIdx,:]
 			image=np.pad(extr_image,((ax,bx),(ay,by),(0,0)),'constant')
-			imglist.append(np.reshape(image[:,:,0],(image.shape[0],image.shape[1],1)))
+			## normalize the each patch
+# 			image = (image-np.mean(image))/np.std(image)
+			im = image[:,:,0]
+# 			im = (im-np.mean(im))/np.std(im)
+			imglist.append(np.reshape(im,(image.shape[0],image.shape[1],1)))
 			densitylist.append(np.reshape(image[:,:,1],(image.shape[0],image.shape[1],1)))
 	return imglist, densitylist
 
@@ -467,10 +581,13 @@ def train_model(model, X_train, X_val, Y_train, Y_val, nb_epochs=400, nb_epoch_p
 	te_loss=[]
 	tr_acc =[]
 	te_acc =[]
+	mae_list=[]
+	std_list=[]
 	bs_acc =0.0
 	bs_mse =float('Inf')
 # 	print(input_shape[0])
 	hImgSize=floor(input_shape[0]/2)
+	print(hImgSize)
 	while(epochIdx<nb_epochs):
 		epochIdx+=1
 		batch=train_gen.next()
@@ -479,7 +596,6 @@ def train_model(model, X_train, X_val, Y_train, Y_val, nb_epochs=400, nb_epoch_p
 		imglist=None
 		densityMaps = np.array(densitylist)
 		densitylist =None
-
 		hist=model.fit(trainImages,densityMaps,batch_size=batch_size, nb_epoch=nb_epoch_per_record, verbose=1, shuffle=True)
 		trainImages=None
 		densityMaps = None
@@ -491,8 +607,244 @@ def train_model(model, X_train, X_val, Y_train, Y_val, nb_epochs=400, nb_epoch_p
 		val_imglist = None
 		val_densitylist = None
 		score=model.evaluate(valImages,valDensityMaps,verbose=1,batch_size=int(batch_size))
+		# make prediction
+		mean_error =0
+		std_error =0
+		estimate_ls = []
+		real_count_ls =[]
+		batch_idx = 0
+		valImages.shape
+		while(True):
+			if ((batch_idx+1)*batch_size<=valDensityMaps.shape[0]):
+				image_arr = valImages[batch_idx*batch_size:(batch_idx+1)*batch_size,:]
+				density_arr = valDensityMaps[batch_idx*batch_size:(batch_idx+1)*batch_size,:]
+			elif ((batch_idx+1)*batch_size>valDensityMaps.shape[0] and batch_idx*batch_size<valDensityMaps.shape[0]):
+				image_arr = valImages[batch_idx*batch_size:,:]
+				density_arr = valDensityMaps[batch_idx*batch_size:,:]
+			else:
+				break
+			preds = model.predict(image_arr)
+			preds = preds.reshape(-1,preds.shape[1],preds.shape[2])
+			preds = preds/100
+			density_arr = density_arr/100
+			pred_counts = np.apply_over_axes(np.sum,preds,[1,2]).reshape(preds.shape[0])
+			ground_counts = np.apply_over_axes(np.sum,density_arr,[1,2]).reshape(preds.shape[0])
+			estimate_ls +=pred_counts.tolist()
+			real_count_ls +=ground_counts.tolist()	
+			batch_idx += 1
+		count_arr = np.array(estimate_ls)
+		real_count_arr =np.array(real_count_ls)
+		mean_error = np.mean(np.abs(count_arr-real_count_arr))
+		std_error = np.std(np.abs(count_arr-real_count_arr))
+		mae_list.append(mean_error)
+		std_list.append(std_error)
 		valImages=None
 		valDensityMaps =None
+		tr_loss.append(hist.history['loss'][-1])
+		te_loss.append(score)
+# 		print([tr_loss[-1],te_loss[-1]])
+		print('\nepoch '+str(epochIdx)+'-> train mse:'+str(tr_loss[-1])+', val mse:'+str(te_loss[-1])+'--')
+		print('epoch '+str(epochIdx)+'-> val mae:'+str(mae_list[-1])+', val std ae:'+str(std_list[-1])+'--')
+		plot_loss(model.name, tr_loss, te_loss)
+		plot_mae(model.name, mae_list, std_list)
+		save_train_loss(model.name, tr_loss, te_loss)
+# 		plot_save(model.name,tr_loss,te_loss,tr_acc,te_acc)
+# 		save_all_results(model.name,tr_loss,te_loss,tr_acc,te_acc)
+		if bs_mse>score:
+			save_model(model,model.name)
+			bs_mse=score
+
+## training with control of whether to compute the mean of absolute error
+def train_model1(model, X_train, X_val, Y_train, Y_val, nb_epochs=400, nb_epoch_per_record=1, input_shape=(100,100,1), batch_size =256, is_mae = False):
+	from math import floor
+	Y_train=Y_train.reshape((Y_train.shape[0],Y_train.shape[1],Y_train.shape[2],1))
+	X_train=X_train.reshape((X_train.shape[0],X_train.shape[1],X_train.shape[2],1))
+	Images=np.concatenate([X_train,Y_train, Y_train],axis=3)
+
+	Y_val=Y_val.reshape((Y_val.shape[0],Y_val.shape[1],Y_val.shape[2],1))
+	X_val=X_val.reshape((X_val.shape[0],X_val.shape[1],X_val.shape[2],1))
+	val_Images=np.concatenate([X_val,Y_val, Y_val],axis=3)
+	
+	## train data generator
+	train_datagen = ImageDataGenerator(
+	horizontal_flip = True,
+	vertical_flip =True,
+	fill_mode = "constant",
+	cval=0,
+	zoom_range = 0.0,
+	width_shift_range = 0,
+	height_shift_range= 0,
+	rotation_range=50)
+	train_datagen.fit(Images)
+	train_gen=train_datagen.flow(Images,None,batch_size=Images.shape[0])
+	## validation data generator
+	val_datagen = ImageDataGenerator(
+	horizontal_flip = True,
+	vertical_flip =True,
+	fill_mode = "constant",
+	cval=0,
+	zoom_range = 0.0,
+	width_shift_range = 0,
+	height_shift_range=0,
+	rotation_range=50)
+	val_datagen.fit(val_Images)
+	val_gen=val_datagen.flow(val_Images,None,batch_size=val_Images.shape[0])
+	
+	# training
+	nb_sampling=200
+	nb_val_sampling=200
+	epochIdx=0
+	tr_loss=[]
+	te_loss=[]
+	tr_acc =[]
+	te_acc =[]
+	mae_list=[]
+	std_list=[]
+	bs_acc =0.0
+	bs_mse =float('Inf')
+# 	print(input_shape[0])
+	hImgSize=floor(input_shape[0]/2)
+	print(hImgSize)
+	while(epochIdx<nb_epochs):
+		epochIdx+=1
+		batch=train_gen.next()
+		imglist, densitylist= patch_density_gen(batch[:,:,:,:2], hImgSize, nb_sampling=nb_sampling)
+		trainImages=np.array(imglist)
+		imglist=None
+		densityMaps = np.array(densitylist)
+		densitylist =None
+		hist=model.fit(trainImages,densityMaps,batch_size=batch_size, nb_epoch=nb_epoch_per_record, verbose=1, shuffle=True)
+		trainImages=None
+		densityMaps = None
+		## evaluation
+		val_batch=val_gen.next()
+		val_imglist, val_densitylist=patch_density_gen(val_batch[:,:,:,:2], hImgSize, nb_sampling=nb_val_sampling)
+		valImages=np.array(val_imglist)
+		valDensityMaps = np.array(val_densitylist)
+		val_imglist = None
+		val_densitylist = None
+		score=model.evaluate(valImages,valDensityMaps,verbose=1,batch_size=int(batch_size))
+		tr_loss.append(hist.history['loss'][-1])
+		te_loss.append(score)
+		print('\nepoch '+str(epochIdx)+'-> train mse:'+str(tr_loss[-1])+', val mse:'+str(te_loss[-1])+'--')
+		plot_loss(model.name, tr_loss, te_loss)
+		save_train_loss(model.name, tr_loss, te_loss)
+		if bs_mse>score:
+			save_model(model,model.name)
+			bs_mse=score
+		# make prediction
+		if is_mae:
+			mean_error =0
+			std_error =0
+			estimate_ls = []
+			real_count_ls =[]
+			batch_idx = 0
+			valImages.shape
+			while(True):
+				if ((batch_idx+1)*batch_size<=valDensityMaps.shape[0]):
+					image_arr = valImages[batch_idx*batch_size:(batch_idx+1)*batch_size,:]
+					density_arr = valDensityMaps[batch_idx*batch_size:(batch_idx+1)*batch_size,:]
+				elif ((batch_idx+1)*batch_size>valDensityMaps.shape[0] and batch_idx*batch_size<valDensityMaps.shape[0]):
+					image_arr = valImages[batch_idx*batch_size:,:]
+					density_arr = valDensityMaps[batch_idx*batch_size:,:]
+				else:
+					break
+				preds = model.predict(image_arr)
+				preds = preds.reshape(-1,preds.shape[1],preds.shape[2])
+				preds = preds/100
+				density_arr = density_arr/100
+				pred_counts = np.apply_over_axes(np.sum,preds,[1,2]).reshape(preds.shape[0])
+				ground_counts = np.apply_over_axes(np.sum,density_arr,[1,2]).reshape(preds.shape[0])
+				estimate_ls +=pred_counts.tolist()
+				real_count_ls +=ground_counts.tolist()	
+				batch_idx += 1
+			count_arr = np.array(estimate_ls)
+			real_count_arr =np.array(real_count_ls)
+			mean_error = np.mean(np.abs(count_arr-real_count_arr))
+			std_error = np.std(np.abs(count_arr-real_count_arr))
+			mae_list.append(mean_error)
+			std_list.append(std_error)
+			plot_mae(model.name, mae_list, std_list)
+			print('epoch '+str(epochIdx)+'-> val mae:'+str(mae_list[-1])+', val std ae:'+str(std_list[-1])+'--')
+		valImages=None
+		valDensityMaps =None
+
+## train a linear regression model, without deconvolution
+def train_regression_model(model, X_train, X_val, Y_train, Y_val, nb_epochs=400, nb_epoch_per_record=1, input_shape=(100,100,1), batch_size =256):
+	from math import floor
+	Y_train=Y_train.reshape((Y_train.shape[0],Y_train.shape[1],Y_train.shape[2],1))
+	X_train=X_train.reshape((X_train.shape[0],X_train.shape[1],X_train.shape[2],1))
+	Images=np.concatenate([X_train,Y_train, Y_train],axis=3)
+
+	Y_val=Y_val.reshape((Y_val.shape[0],Y_val.shape[1],Y_val.shape[2],1))
+	X_val=X_val.reshape((X_val.shape[0],X_val.shape[1],X_val.shape[2],1))
+	val_Images=np.concatenate([X_val,Y_val, Y_val],axis=3)
+	
+	## train data generator
+	train_datagen = ImageDataGenerator(
+	horizontal_flip = True,
+	vertical_flip =True,
+	fill_mode = "constant",
+	cval=0,
+	zoom_range = 0.0,
+	width_shift_range = 0,
+	height_shift_range= 0,
+	rotation_range=50)
+	train_datagen.fit(Images)
+	train_gen=train_datagen.flow(Images,None,batch_size=Images.shape[0])
+	## validation data generator
+	val_datagen = ImageDataGenerator(
+	horizontal_flip = True,
+	vertical_flip =True,
+	fill_mode = "constant",
+	cval=0,
+	zoom_range = 0.0,
+	width_shift_range = 0,
+	height_shift_range=0,
+	rotation_range=50)
+	val_datagen.fit(val_Images)
+	val_gen=val_datagen.flow(val_Images,None,batch_size=val_Images.shape[0])
+	
+	# training
+	nb_sampling=200
+	nb_val_sampling=200
+	epochIdx=0
+	tr_loss=[]
+	te_loss=[]
+	tr_acc =[]
+	te_acc =[]
+	bs_acc =0.0
+	bs_mse =float('Inf')
+# 	print(input_shape[0])
+	hImgSize=floor(input_shape[0]/2)
+	print(hImgSize)
+	while(epochIdx<nb_epochs):
+		epochIdx+=1
+		batch=train_gen.next()
+		imglist, densitylist= patch_density_gen(batch[:,:,:,:2], hImgSize, nb_sampling=nb_sampling)
+		trainImages=np.array(imglist)
+		imglist=None
+		densityMaps = np.array(densitylist)
+		densitylist =None
+		# convert density map into the cell count
+		cellVec = np.apply_over_axes(np.sum, densityMaps, [1,2]).reshape(-1,1)
+		print(cellVec.shape)
+		hist=model.fit(trainImages,cellVec,batch_size=batch_size, nb_epoch=nb_epoch_per_record, verbose=1, shuffle=True)
+		trainImages=None
+		densityMaps = None
+		cellVec = None
+		## evaluation
+		val_batch=val_gen.next()
+		val_imglist, val_densitylist=patch_density_gen(val_batch[:,:,:,:2], hImgSize, nb_sampling=nb_val_sampling)
+		valImages=np.array(val_imglist)
+		valDensityMaps = np.array(val_densitylist)
+		val_imglist = None
+		val_densitylist = None
+		val_cellVec = np.apply_over_axes(np.sum, valDensityMaps, [1,2]).reshape(-1,1)
+		score=model.evaluate(valImages,val_cellVec,verbose=1,batch_size=int(batch_size))
+		valImages=None
+		valDensityMaps =None
+		val_cellVec = None
 		tr_loss.append(hist.history['loss'][-1])
 		te_loss.append(score)
 # 		print([tr_loss[-1],te_loss[-1]])
@@ -597,6 +949,101 @@ def patch_merge_for_display(imgSet, imgSize):
 		merged_image += images[i,:,:]*map
 	return merged_image
 
+# zero pad with an same extension width to each direction
+def image_zeropad(image, exWidth):
+	return np.lib.pad(image,((exWidth,exWidth),(exWidth,exWidth)),'constant')
+
+# shrink an image with the same shrinkage length to each direction
+def image_shrink(image, shLength):
+	shp = image.shape
+	return image[shLength:shp[0]-shLength,shLength:shp[1]-shLength]
+	
+# zero pad an image set
+def image_arr_zeropad(imgSet, exWidth):
+	shp = imgSet.shape
+	if len(shp)<3:
+		print('shrink input error!!!')
+		return
+	return np.lib.pad(imgSet,((0,0),(exWidth,exWidth),(exWidth,exWidth)),'constant')
+
+# shrink an image set
+def image_arr_shrink(imgSet, shLength):
+	shp = imgSet.shape
+	if len(shp)<3:
+		print('shrink input error!!!')
+		return
+	return imgSet[:,shLength:shp[1]-shLength,shLength:shp[2]-shLength]
+
+# depatch an image set
+def image_depatch(imgSet, output_size):
+	from math import floor
+	shp = imgSet.shape
+	imgNum = shp[0]
+	imgSize = shp[1]
+	if imgSize%output_size != 0:
+		pad_size = int(imgSize/output_size+1)*output_size
+		zero_thickness = int((pad_size- imgSize)/2)
+		imgSet = image_arr_zeropad(imgSet, zero_thickness)
+
+	imgSize = imgSet.shape[1]
+	nb_patch_x = int(imgSize/output_size)
+	patch_list=[]
+	for i in range(imgNum):
+		image = imgSet[i,:,:]
+		for px in range(nb_patch_x):
+			for py in range(nb_patch_x):
+				patch_list.append(image[px*output_size:(px+1)*output_size,py*output_size:(py+1)*output_size])
+	# 				
+	# 	patch_arr = np.array(patch_list,(-1,output_size,output_size))
+	return np.array(patch_list)
+	
+# merge an image set
+def image_merge(preds, output_size):
+	shp = preds.shape
+	merged_size = output_size
+	if output_size%shp[1]!= 0:
+		merged_size = (int(output_size/shp[1])+1)*shp[1]
+	nb_x = int(merged_size/shp[1])
+	nb_pch_per_img = nb_x*nb_x
+	den_list = []
+	nb_map = int(shp[0]/nb_pch_per_img)
+	den_map = np.zeros((nb_map,merged_size,merged_size))
+	for i in range(shp[0]):
+		mIdx = i//nb_pch_per_img
+		kth = i%nb_pch_per_img
+		xth = kth//nb_x
+		yth = kth%nb_x
+		den_map[mIdx,xth*shp[1]:(xth+1)*shp[1],yth*shp[1]:(yth+1)*shp[1]]=preds[i,:,:]
+	# shrink the images
+	shLength = int((merged_size-output_size)/2)
+	den_map = image_arr_shrink(den_map, shLength)
+	return den_map
+
+def img_den_pair_depatch(batch, output_size):
+	from math import floor
+	imgSet = batch
+	shp = imgSet.shape
+	imgNum = shp[0]
+	imgSize = shp[1]
+	if imgSize%output_size != 0:
+		pad_size = int(imgSize/output_size+1)*output_size
+		zero_thickness = int((pad_size- imgSize)/2)
+		imgSet = image_arr_zeropad(imgSet, zero_thickness)
+
+	imgSize = imgSet.shape[1]
+	nb_patch_x = int(imgSize/output_size)
+	patch_list=[]
+	for i in range(imgNum):
+		image = imgSet[i,:,:]
+		for px in range(nb_patch_x):
+			for py in range(nb_patch_x):
+				patch_list.append(image[px*output_size:(px+1)*output_size,py*output_size:(py+1)*output_size])
+	patch_arr = np.array(patch_list)
+	image_patches = patch_arr[:,:,:,0]
+	density_patches = patch_arr[:,:,:,1]
+
+	return image_patches, density_patches
+
 
 def test_model(model,X_data,Y_data, nb_image, input_shape=(65,65,3)):
 	pixelList=[]
@@ -663,3 +1110,37 @@ def get_crop_shape(target, refer):
 # 		ch1, ch2 = int(ch/2), int(ch/2)
 	ch1, ch2 = cw1, cw2
 	return (ch1, ch2), (cw1, cw2)
+
+## display the results as a video
+## input: figure instance, image set, prediction set and ground truth density map
+def visualize_results(fig, imgSet, predSet, grdSet, nb_slides, interval):
+	import numpy as np
+	import matplotlib.pyplot as plt
+	for i in range(nb_slides):
+		plt.clf()
+		# read the image
+		shp = imgSet.shape
+		image = imgSet[i,:].reshape(shp[1],shp[2])
+		ground_truth = grdSet[i,:].reshape(shp[1],shp[2])
+		max_value = np.max(ground_truth)
+		min_value = np.min(ground_truth)
+		pred_map = predSet[i,:].reshape(shp[1],shp[2])
+		pred_count = np.sum(pred_map)
+		real_count = np.sum(ground_truth)
+		pred_map = (pred_map - np.min(pred_map))/(np.max(pred_map)-np.min(pred_map))*(max_value-min_value)+min_value
+		print([pred_count, real_count])
+		ax = fig.add_subplot(1,3,1)
+		cax = ax.imshow(image)
+		fig.colorbar(cax)
+		ax.set_title('Cell image('+str(shp[1])+'x'+str(shp[2])+')')
+		ax = fig.add_subplot(1,3,2)
+		cax = ax.imshow(pred_map)
+		fig.colorbar(cax)
+		ax.set_title('Estimated density('+str(shp[1])+'x'+str(shp[2])+')')
+		ax.set_xlabel('Cell count:'+str(pred_count))
+		ax = fig.add_subplot(1,3,3)
+		cax = ax.imshow(ground_truth)
+		fig.colorbar(cax)
+		ax.set_title('Ground truth('+str(shp[1])+'x'+str(shp[2])+')')
+		ax.set_xlabel('Cell count:'+str(real_count))
+		plt.pause(interval)

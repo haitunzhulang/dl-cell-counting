@@ -12,7 +12,7 @@ from sklearn.metrics import classification_report
 import tensorflow as tf
 import keras.backend.tensorflow_backend as KTF
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 def get_session(gpu_fraction=1.0):
 #     '''Assume that you have 6GB of GPU memory and want to allocate ~2GB'''
@@ -26,7 +26,7 @@ def get_session(gpu_fraction=1.0):
 
 # KTF.set_session(get_session())
 
-nb_epochs = 500
+nb_epochs = 318
 nb_epoch_per_record =1
 input_shape=[(200,200)]
 
@@ -37,23 +37,27 @@ input_shape=[(200,200)]
 # val_version = 9    # cell size: 8, kernel: 4.5, min intensity: close to x2, no background
 # val_version = 10
 val_version = 11
+# val_version = 13
 
 lr=0.005
-model=cg.fcn200()
+# model=cg.fcn200()
 # model=cg.FCN()
 # model=cg.FCN1()
+# model=cg.ResFCN()
+# model=cg.WOResFCN()
+model=cg.WOResFCRN()
 sgd = SGD(lr=lr, decay=1e-4, momentum=0.9, nesterov=True)
 model.compile(loss='mean_squared_error', optimizer=sgd)
 
 #X_train,X_val,Y_train,Y_val=hf.load_random_data()
 X_train,X_val,Y_train,Y_val=hf.load_random_data(val_version=val_version)
 
-batch_size = int(X_train.shape[0]*10/20)
+batch_size = int(X_train.shape[0]*8/20)
 # scale the ground truth by multiplying 100
 Y_train = Y_train * 100
 Y_val = Y_val * 100
 
-model_name = '10.09-'+'lr-'+str(lr)+ '-scaled'+'-batch-'+str(batch_size)+'-v'+str(val_version)+'-fcn200'
+model_name = '11.3-'+'lr-'+str(lr)+ '-scaled'+'-batch-'+str(batch_size)+'-v'+str(val_version)+'-WOResFCRN'
 # model_name = '9.30-'+'lr-'+str(lr)+ '-scaled'+'-batch-'+str(batch_size)+'-v'+str(val_version)+'-FCN'
 model.name = model_name
 hf.train_model(model, X_train,X_val,Y_train,Y_val, nb_epochs=nb_epochs, nb_epoch_per_record=nb_epoch_per_record, input_shape=input_shape[0], batch_size = batch_size)

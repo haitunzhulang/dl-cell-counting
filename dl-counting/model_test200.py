@@ -14,10 +14,10 @@ import scipy.misc as misc
 import keras.backend.tensorflow_backend as KTF
 import tensorflow as tf
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 val_version=3
 
-def get_session(gpu_fraction=1.0):
+def get_session(gpu_fraction=0.9):
 #     '''Assume that you have 6GB of GPU memory and want to allocate ~2GB'''
     num_threads = os.environ.get('OMP_NUM_THREADS')
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_fraction)
@@ -41,8 +41,13 @@ input_shape=[(200,200)]
 # model_path = '9.30-lr-0.001-scaled-batch-100-v11-FCN/'+ 'model.h5'
 # model_path = '9.30-lr-0.0015-scaled-batch-100-v10-FCN/'+ 'model.h5'
 
-model_path = '9.28-lr-0.001-scaled-batch-100-v11-fcn-200/'+ 'model.h5'
+# model_path = '9.28-lr-0.001-scaled-batch-100-v11-fcn-200/'+ 'model.h5'
+model_path = '11.1-lr-0.005-scaled-batch-80-v11-WOResFCN/'+ 'model.h5'
+# model_path = '10.31-lr-0.005-scaled-batch-80-v11-ResFCN/'+ 'model.h5'
 val_version = 11
+
+# model_path = '10.10-lr-0.005-scaled-batch-100-v12-FCN1/'+ 'model.h5'
+# val_version = 12
 model=load_model(model_path)	
 # lr=0.0005
 # model=cg.fcn32()
@@ -148,6 +153,7 @@ for i in range(len(imagelist)):
 # 	plt.pause(0.5)
 
 hf.plot_cell_counts(model.name, preds_count_list, real_count_list)
+hf.plot_cell_counts_comp(model.name, preds_count_list, preds_count_list, real_count_list)
 # error statistics
 abs_err_list = np.abs((np.array(preds_count_list)-np.array(real_count_list)))
 mean_abs_err = np.mean(abs_err_list)
@@ -248,68 +254,68 @@ result_arr = np.transpose(result_arr)
 # for row in reader:
 # 	print(row)
 
-# plt.ion()
-# fig =plt.figure()
-# 
-# for i in range(shp[0]):
-# 	plt.clf()
-# 	ax =fig.add_subplot(3,4,1)
-# # 	cax = ax.imshow(real_data[i,1,:,:])
-# 	cax = ax.imshow(real_images[i,1,:,:])
-# 	fig.colorbar(cax)
-# 	ax.set_ylabel('Real cell image')
-# 	ax.set_title('dapi')
-# 	ax =fig.add_subplot(3,4,2)
-# # 	ax.imshow(real_data[i,0,:,:])
-# 	ax.imshow(real_images[i,0,:,:])
-# # 	cax = ax.imshow(Images[0,:,:,0])
-# 	fig.colorbar(cax)
-# 	ax.set_title('cxd2')
-# 	ax =fig.add_subplot(3,4,3)
-# # 	cax = ax.imshow(real_data[i,2,:,:])
-# 	cax = ax.imshow(real_images[i,2,:,:])
-# 	fig.colorbar(cax)
-# 	ax.set_title('sox17')
-# 	ax =fig.add_subplot(3,4,4)
-# # 	cax = ax.imshow(real_data[i,3,:,:])
-# 	cax = ax.imshow(real_images[i,3,:,:])
-# 	fig.colorbar(cax)
-# 	ax.set_title('sox2')
-# 	ax =fig.add_subplot(3,4,5)
-# 	cax = ax.imshow(seg_data[i,1,:,:])
-# 	fig.colorbar(cax)
-# 	ax.set_ylabel('Minn segmented result')
-# 	ax.set_xlabel('Cell count: '+str(result_arr[i,1]))
-# 	ax =fig.add_subplot(3,4,6)
-# 	cax =  ax.imshow(seg_data[i,0,:,:])
-# 	fig.colorbar(cax)
-# 	ax.set_xlabel('Cell count: '+str(result_arr[i,0]))
-# 	ax =fig.add_subplot(3,4,7)
-# 	cax = ax.imshow(seg_data[i,2,:,:])
-# 	fig.colorbar(cax)
-# 	ax.set_xlabel('Cell count: '+str(result_arr[i,2]))
-# 	ax =fig.add_subplot(3,4,8)
-# 	cax = ax.imshow(seg_data[i,3,:,:])
-# 	fig.colorbar(cax)
-# 	ax.set_xlabel('Cell count: '+str(result_arr[i,3]))
-# 	ax =fig.add_subplot(3,4,9)
-# 	cax = ax.imshow(density_arr[i,1,:,:])
-# 	fig.colorbar(cax)
-# 	ax.set_ylabel('Estimated density map')
-# 	ax.set_xlabel('Cell count: '+str(count_arr[i,1]))
-# 	ax =fig.add_subplot(3,4,10)
-# 	cax =  ax.imshow(density_arr[i,0,:,:])
-# 	fig.colorbar(cax)
-# 	ax.set_xlabel('Cell count: '+str(count_arr[i,0]))
-# 	ax =fig.add_subplot(3,4,11)
-# 	cax = ax.imshow(density_arr[i,2,:,:])
-# 	fig.colorbar(cax)
-# 	ax.set_xlabel('Cell count: '+str(count_arr[i,2]))
-# 	ax =fig.add_subplot(3,4,12)
-# 	cax = ax.imshow(density_arr[i,3,:,:])
-# 	fig.colorbar(cax)
-# 	ax.set_xlabel('Cell count: '+str(count_arr[i,3]))
-# 	plt.pause(1)
+plt.ion()
+fig =plt.figure()
+
+for i in range(shp[0]):
+	plt.clf()
+	ax =fig.add_subplot(3,4,1)
+# 	cax = ax.imshow(real_data[i,1,:,:])
+	cax = ax.imshow(real_images[i,1,:,:])
+	fig.colorbar(cax)
+	ax.set_ylabel('Real cell image')
+	ax.set_title('dapi')
+	ax =fig.add_subplot(3,4,2)
+# 	ax.imshow(real_data[i,0,:,:])
+	ax.imshow(real_images[i,0,:,:])
+# 	cax = ax.imshow(Images[0,:,:,0])
+	fig.colorbar(cax)
+	ax.set_title('cxd2')
+	ax =fig.add_subplot(3,4,3)
+# 	cax = ax.imshow(real_data[i,2,:,:])
+	cax = ax.imshow(real_images[i,2,:,:])
+	fig.colorbar(cax)
+	ax.set_title('sox17')
+	ax =fig.add_subplot(3,4,4)
+# 	cax = ax.imshow(real_data[i,3,:,:])
+	cax = ax.imshow(real_images[i,3,:,:])
+	fig.colorbar(cax)
+	ax.set_title('sox2')
+	ax =fig.add_subplot(3,4,5)
+	cax = ax.imshow(seg_data[i,1,:,:])
+	fig.colorbar(cax)
+	ax.set_ylabel('Minn segmented result')
+	ax.set_xlabel('Cell count: '+str(result_arr[i,1]))
+	ax =fig.add_subplot(3,4,6)
+	cax =  ax.imshow(seg_data[i,0,:,:])
+	fig.colorbar(cax)
+	ax.set_xlabel('Cell count: '+str(result_arr[i,0]))
+	ax =fig.add_subplot(3,4,7)
+	cax = ax.imshow(seg_data[i,2,:,:])
+	fig.colorbar(cax)
+	ax.set_xlabel('Cell count: '+str(result_arr[i,2]))
+	ax =fig.add_subplot(3,4,8)
+	cax = ax.imshow(seg_data[i,3,:,:])
+	fig.colorbar(cax)
+	ax.set_xlabel('Cell count: '+str(result_arr[i,3]))
+	ax =fig.add_subplot(3,4,9)
+	cax = ax.imshow(density_arr[i,1,:,:])
+	fig.colorbar(cax)
+	ax.set_ylabel('Estimated density map')
+	ax.set_xlabel('Cell count: '+str(count_arr[i,1]))
+	ax =fig.add_subplot(3,4,10)
+	cax =  ax.imshow(density_arr[i,0,:,:])
+	fig.colorbar(cax)
+	ax.set_xlabel('Cell count: '+str(count_arr[i,0]))
+	ax =fig.add_subplot(3,4,11)
+	cax = ax.imshow(density_arr[i,2,:,:])
+	fig.colorbar(cax)
+	ax.set_xlabel('Cell count: '+str(count_arr[i,2]))
+	ax =fig.add_subplot(3,4,12)
+	cax = ax.imshow(density_arr[i,3,:,:])
+	fig.colorbar(cax)
+	ax.set_xlabel('Cell count: '+str(count_arr[i,3]))
+	plt.pause(1)
 
 ## compare the synthetic patch and the real patch
 # plt.ion()

@@ -4,12 +4,17 @@ import matplotlib.pyplot as plt
 
 folder = '/home/shenghua/dl-cell-counting/mt-cell-train-data/dataset/'
 
-imageFileName = folder + 'imageSet.dat'
-densityFileName = folder + 'densitySet.dat'
+#imageFileName = folder + 'imageSet.dat'
+#densityFileName = folder + 'densitySet.dat'
 
-x = dl.train_load(imageFileName)
-y = dl.truth_load(densityFileName)
+imageFileName = folder + 'realImages.dat'
+densityFileName = folder + 'realDensities.dat'
 
+# x = dl.train_load(imageFileName)
+# y = dl.truth_load(densityFileName)
+
+x = dl.train_data_load(imageFileName,(512,512),10)
+y = dl.truth_data_load(densityFileName,(512,512),10)
 
 fig = plt.figure()
 

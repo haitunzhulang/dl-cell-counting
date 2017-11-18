@@ -12,12 +12,13 @@ from sklearn.metrics import classification_report
 from keras.models import load_model
 import scipy.misc as misc
 import keras.backend.tensorflow_backend as KTF
+from keras import backend as K
 import tensorflow as tf
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # val_version=3
 
-def get_session(gpu_fraction=1.0):
+def get_session(gpu_fraction=0.9):
 #     '''Assume that you have 6GB of GPU memory and want to allocate ~2GB'''
     num_threads = os.environ.get('OMP_NUM_THREADS')
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_fraction)
@@ -43,9 +44,12 @@ val_version = 10
 # model_path = '9.30-lr-0.0015-scaled-batch-100-v10-FCN/'+ 'model.h5'
 
 val_version = 11
-model_path1 = '9.28-lr-0.001-scaled-batch-100-v11-fcn-200/'+ 'model.h5'
+# model_path1 = '9.28-lr-0.001-scaled-batch-100-v11-fcn-200/'+ 'model.h5'
 # model_path2 = '9.30-lr-0.001-scaled-batch-100-v11-FCN/'+ 'model.h5'
-model_path2 = '10.07-lr-0.005-scaled-batch-100-v11-FCN1/'+ 'model.h5'
+# model_path1 = '10.04-lr-0.0015-scaled-batch-100-v10-fcn200/'+ 'model.h5'
+model_path1 = '10.31-lr-0.005-scaled-batch-80-v11-ResFCN/'+ 'model.h5'
+# model_path2 = '10.07-lr-0.005-scaled-batch-100-v11-FCN1/'+ 'model.h5'
+model_path2 = '11.1-lr-0.005-scaled-batch-80-v11-WOResFCN/'+ 'model.h5'
 
 # val_version = 10
 # model_path1 = '10.04-lr-0.0015-scaled-batch-100-v10-fcn200/'+ 'model.h5'
@@ -76,6 +80,7 @@ real_count = np.sum(Images[0,:,:,1])
 print([pred_count, real_count])
 
 # the results based on FCN model
+K.clear_session()
 model=load_model(model_path2)
 preds_list2 = []
 for i in range(9):
@@ -143,6 +148,7 @@ ax.set_xlabel('Cell count:'+str(pred_count2))
 
 # density over patches
 # results for FCRN model
+K.clear_session()
 model=load_model(model_path1)
 preds_list = []
 preds_count_list = []
@@ -163,6 +169,7 @@ std_abs_err = np.std(abs_err_list)
 print((mean_abs_err, std_abs_err))
 
 # results for FCN model
+K.clear_session()
 model=load_model(model_path2)
 preds_list2 = []
 preds_count_list2 = []
@@ -228,7 +235,7 @@ for i in range(shp[0]):
 	for j in range(shp[1]):
 		image = real_data[i,j,:,:]
 		image = 256*(image - np.min(image))/(np.max(image)-np.min(image))
-# 		image = image*(image>25)
+		image = image*(image>5)
 		real_images_list.append(image)
 		patches_list.append(image[:200,:200])
 		patches_list.append(image[:200,200:400])
@@ -238,6 +245,7 @@ for i in range(shp[0]):
 real_images = np.array(real_images_list).reshape(26,4,400,400)
 
 # results for FCRN
+K.clear_session()
 model=load_model(model_path1)
 # estimate the density for each image patch	
 preds_list =[]
@@ -266,6 +274,7 @@ density_arr = np.reshape(np.array(density_maps_list),shp)
 count_arr = np.array(count_list).reshape(-1,4)
 
 # results for FCN
+K.clear_session()
 model=load_model(model_path2)
 # estimate the density for each image patch
 preds_list =[]
